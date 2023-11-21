@@ -7,19 +7,19 @@ ms.topic: how-to
 ms.date: 11/17/2023
 ---
 
-# Deploy a multisite SDN solution in Azure Stack HCI
+# Deploy SDN Multisite in Azure Stack HCI
 
-This article describes how to deploy the Software defined networking (SDN) Multisite solution in Azure Stack HCI.
+This article describes how to deploy the Software Defined Networking (SDN) Multisite solution in Azure Stack HCI. If you'd like an in-depth description of how this feature works with other SDN components, such as Software Load Balancer or Gateways, see [deep-dive link].
 
-SDN Multisite enables you to have Layer 2 and Layer 3 connectivity for virtualized workloads across multiple physical locations.
+SDN Multisite enables you to have native Layer 2 (L2) and Layer 3 (L3) connectivity across multiple physical locations for SDN deployments.
 
 ## Benefits
 
 Here are the benefits of using SDN Multisite:
 
-- **Seamless workload migration.** Seamlessly migrate workloads across locations without having to reconfigure IP addresses or pre-existing Network Security Groups (NSGs).
-- **Automatic reachability to new VMs.** Get automatic reachability to newly created virtual machines (VMs) and automatic manageability to any of their associated NSGs across your physical locations. manageability to any of their associated NSGs across your physical locations. This document will cover how to deploy this feature through various management. If you'd
-like an in-depth description of how this feature will work with our other services such as Software Load Balancer or Gateways, then please refer to our technical deep-dive document linked in the Notes bubble below.
+- **Unified policy management system.** Manage and configure your networks across multiple locations from a single primary location, with shared virtual networks and policy configurations.
+- **Seamless workload migration.** Seamlessly migrate workloads across phyical locations without having to reconfigure IP addresses or pre-existing Network Security Groups (NSGs).
+- **Automatic reachability to new VMs.** Get automatic reachability to newly created virtual machines (VMs) and automatic manageability to any of their associated NSGs across your physical locations.
 
 ## Capabilities and limitations
 
@@ -32,61 +32,59 @@ The following table provides the capabilities and limitations of the SDN Multisi
 | Native Layer 2 and Layer 3 connectivity | Gateways |
 | Unified policy management |  |
 
-
-*\*For an in depth discussion on our limitations and capabilities,
-please refer to the our technical deep dive article (LINK).*
-
 ## Prerequisites
 
-Before you begin, please ensure the following prerequisites are met:
+Before you begin the deployment, ensure the following prerequisites are met:
 
-- There must be underlying [physical network connectivity](../concepts/plan-software-defined-networking-infrastructure.md#physical-and-logical-network-configuration) between two sites. Moreover, the Provider Network name must be the same on both sites.
+- There must be underlying [physical network connectivity](../concepts/plan-software-defined-networking-infrastructure.md#physical-and-logical-network-configuration) between two sites. Additionally, the provider network name must be the same on both sites.
 
-- TCP port 49001 must be permitted by firewalls for cross-cluster communication.
+- Your firewall configuration must permit TCP port 49001 for cross-cluster communication.
 
-- SDN must be installed on both sites separately, using SDN Express scripts or using Windows Admin Center. Hence, SDN infrastructure like Network Controller VMs, SLB MUX VMs and SDN Gateway VMs are unique to each site.
+- SDN must be installed on both sites separately, using [Windows Admin Center](./sdn-wizard.md) or [SDN Express scripts](../manage/sdn-express.md). Consequently, SDN components, such as Network Controller VMs, Software Load Balancer Multiplexor VMs, and SDN Gateway VMs are unique to each site.
 
-- At least one of the two sites must not have any virtual networks and/or Network Security Groups (NSGs) and/or user defined routes configured.
+- One of the two sites must not have any virtual networks, NSGs, and user defined routes configured.
 
 - The SDN MAC pool must not overlap between the two sites.
 
-- The IP pools for the logical networks (HNV PA, Public VIP, Private VIP, GRE VIP, L3) must not overlap between the two sites.
+- The IP pools for the logical networks, including Hyper-V Network Virtualization Provider Address (HNV PA), Public VIP, Private VIP, Generic Routing Encapsulation (GRE) VIP, and L3 must not overlap between the two sites.
 
 ## Deploy SDN Multisite
 
-You can deploy SDN multisite via Windows Admin Center and PowerShell.
+You can deploy SDN multisite using Windows Admin Center or PowerShell.
 
 # [Windows Admin Center](#tab/windows-admin-center)
 
-![A screenshot of a computer Description automatically
-generated](./media/media/image2.png){width="6.495138888888889in"
-height="3.9166666666666665in"}
+Follow these steps to deploy SDN Multisite using Windows Admin Center:
 
-1. To set up multisite through Windows Admin Center, first click on the Network Controller tab in the extension column in Tools.
+1. In Windows Admin Center, connect to your cluster in the primary site to begin peering across locations . Under **Tools**, scroll down to the **Networking** section, and select **Network controllers**.
 
-1. From there, click on New to add a secondary site.
+1. On the **Network Controllers** page, select **New** to add a secondary site.
 
-1. Once you've clicked on New, another window will pop up asking for the following:
+1. On the **Connect clusters** pane on the right, provide the necessary REST information:
 
-    a.  Name -- The name of this pairing
+    1. Enter the **Name** of this pairing. For example, **Secondary Site**.
 
-    b.  Network Controller REST Uri -- REST URI of your secondary
-        location
+    1. Enter the **Network Controller REST Uri** of the secondary site.
 
-    c.  Cluster Name for New site -- Cluster name of your secondary
-        location
+    1. Enter the **Cluster name for new site** or secondary site.
+    
+    1. Enter the **Network Controller VM name for new site** or secondary site.
+    
+    1. Enter the **Network Controller VM name for** your primary location.
 
-    d.  Network Controller VM name for new site - NC VM name of your
-        secondary location
+1. Select **Submit**.
 
-    e.  Network Controller VM name for -- NC VM for your primary
-        location
+    :::image type="content" source="./media/sdn-multisite/deploy-sdn-multisite.png" alt-text="Deploy SDN Multisite using Windows Admin Center" lightbox="./media/sdn-multisite/deploy-sdn-multisite.png" :::
 
-1. Once you've inputted all fields, simply click on Submit and you're all done
+Once peering is initiated, resources such as virtual networks or policy configurations that were once local to the primary site become global resources synced across locations. 
 
 # [PowerShell](#tab/powershell)
 
-1. To enable Multisite, peering must be initiated from both sites using the `Set-NetworkControllerMultisiteConfiguration` cmdlet. The full details behind the commandlet are as follows:
+Follow these steps to deploy SDN Multisite using PowerShell.
+
+1. To enable SDN Multisite, you must initiate peering from both sites using the `Set-NetworkControllerMultisiteConfiguration` cmdlet. The full details behind the commandlet are as follows:
+
+    Here's the syntax of `Set-NetworkControllerMultisiteConfiguration`:
 
     ```powershell
     Set-NetworkControllerMultisiteConfiguration    [[-Tags] <PSObject>]    [-Properties] <NetworkControllerMultisiteProperties>  [[-Etag] <String>] [[-ResourceMetadata] <ResourceMetadata>]   [-Force] -ConnectionUri <Uri> [-CertificateThumbprint <String>] [-Credential <PSCredential>] [-PassInnerException] [-WhatIf] [-Confirm] [<CommonParameters>]
@@ -132,11 +130,13 @@ height="3.9166666666666665in"}
 
     ```
 
-1. To confirm set-up, you can run the following command your NC VM machine to confirm. Once you've ran this command, you should see your secondary site as confirmation.
+1. Run the following command from your Network Controller VM to confirm the setup.
 
     ```powershell
     Get-NetworkControllerMultisiteConfiguration -ConnectionUri "https://site1.com"  
     ```
+
+    After you run this command, you should see your secondary site as confirmation.
 
 Here's a sample output:
 
