@@ -187,6 +187,37 @@ Here's a sample output:
 
 ---
 
+## Remove peering
+
+When peering is removed, resource synchronization is aborted, and each site keeps its own copy of resources. For example, you have a virtual network with two VMs, one on each site. When peering is removed, each site will still have the same virtual network resource and the local site VM will still function with the same network settings. But it will no longer be able to communicate with the VM on the remote site.
+
+# [Windows Admin Center](#tab/windows-admin-center)
+
+Peering can be removed through powershell simply by clicking on the
+delete button. After you've removed peering, it will take a moment for
+your sites to update. If it still hasn't updated, then refresh your
+browser.
+
+![](./media/media/image1.gif){width="6.145138888888889in"
+height="3.4604166666666667in"}
+
+# [PowerShell](#tab/powershell)
+
+Peering can be removed using the `Set-NetworkControllerMultisiteConfiguration` cmdlet. 
+
+Here is an example of the cmdlet usage:
+
+*\$prop = new-object
+Microsoft.Windows.NetworkController.NetworkControllerMultisiteProperties*
+
+*Set-NetworkControllerMultisiteConfiguration -ConnectionUri
+\\\"https://site1.com\\\" -Properties \$prop -Force*
+
+*Set-NetworkControllerMultisiteConfiguration -ConnectionUri
+\\\"https://site2.com\\\" -Properties \$prop -Force*
+
+---
+
 ## Next steps
 
 Feel free to follow the links attached to our powershell documentation
